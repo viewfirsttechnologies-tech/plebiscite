@@ -1,6 +1,8 @@
-# Deployment & Local Drive Configuration Guide
+# Proposed SOCOTECO II Plebiscite Voting System
 
-Follow these steps to deploy the **SOCOTECO II Plebiscite Voting System** on your local network (LAN) and lock the secured database file directly onto a specific designated drive.
+## Deployment & Local Drive Configuration Guide
+
+Follow these steps to deploy the **Proposed SOCOTECO II Plebiscite Voting System** on your local network (LAN) and lock the secured database file directly onto a specific designated drive.
 
 ---
 

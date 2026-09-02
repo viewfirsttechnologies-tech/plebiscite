@@ -1,5 +1,7 @@
 # Public Notice & Transparency Explanation
 
+# Proposed SOCOTECO II Plebiscite Voting System
+
 ### Notice of Plebiscite on the Conditional Joint Venture Agreement Between SOCOTECO II & Ignite Power
 
 ---

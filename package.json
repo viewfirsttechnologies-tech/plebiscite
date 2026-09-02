@@ -1,7 +1,7 @@
 {
-  "name": "socoteco-plebiscite-blockchain",
+  "name": "proposed-socoteco-ii-plebiscite-voting-system",
   "version": "1.0.0",
-  "description": "Secure Blockchain Plebiscite Voting System for SOCOTECO II",
+  "description": "Proposed SOCOTECO II Plebiscite Voting System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
