@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Private operational data: voter registry and vote ledger
+secure_storage/
+
+# Local configuration and logs
+.env
+.env.*
+*.log
+npm-debug.log*
