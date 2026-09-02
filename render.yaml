@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: socoteco-ii-plebiscite-demo
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DEMO_MODE
+        value: "true"

@@ -21,6 +21,21 @@ npm start
 
 Open `http://localhost:3000` in a browser. To make the application available on a local network, use the host computer's local IPv4 address with port `3000`.
 
+## Run the safe demo
+
+Demo mode uses only four fictional voters and stores the ledger in memory. It does not read or write `secure_storage/`, and all demo votes reset when the server restarts.
+
+PowerShell:
+
+```powershell
+$env:DEMO_MODE = 'true'
+npm start
+```
+
+Open `http://localhost:3000` and use one of these sample IDs: `DEMO-001`, `DEMO-002`, `DEMO-003`, or `DEMO-004`.
+
+For an online demo, deploy this repository to a Node.js host and set the environment variable `DEMO_MODE=true`. The server automatically uses the host-provided `PORT`.
+
 ## Secure data setup
 
 The application expects its registry and vote ledger in `secure_storage/` by default. This directory is intentionally excluded from Git because it can contain personal data and live voting records.

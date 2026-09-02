@@ -41,6 +41,7 @@
         .chain-status { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px; }
         .status-valid { background-color: #dcfce7; color: #166534; }
         .status-invalid { background-color: #fee2e2; color: #991b1b; }
+        .demo-notice { background-color: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 12px; border-radius: 6px; font-weight: 600; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid var(--border-color); padding: 10px; text-align: left; font-size: 0.85rem; word-break: break-all; }
         th { background-color: #f1f5f9; }
@@ -58,6 +59,9 @@
     </header>
 
     <div id="chainStatus" class="chain-status status-valid">Loading System Status...</div>
+    <div id="demoNotice" class="demo-notice" hidden>
+        Demo mode: use DEMO-001, DEMO-002, DEMO-003, or DEMO-004. This uses fictional data and resets when the demo restarts.
+    </div>
 
     <div class="card">
         <h2>Cast Your Plebiscite Vote</h2>
@@ -121,6 +125,16 @@
             renderUI(data.chain, data.isValid);
         } catch (err) {
             console.error('Failed to fetch blockchain:', err);
+        }
+    }
+
+    async function loadConfig() {
+        try {
+            const res = await fetch('/api/config');
+            const config = await res.json();
+            document.getElementById('demoNotice').hidden = !config.demoMode;
+        } catch (err) {
+            console.error('Failed to load configuration:', err);
         }
     }
 
@@ -204,7 +218,10 @@
         }
     }
 
-    window.onload = loadChainData;
+    window.onload = () => {
+        loadConfig();
+        loadChainData();
+    };
 </script>
 </body>
 </html>

@@ -4,7 +4,16 @@ const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+
+const DEMO_REGISTRY = [
+    { id: 'DEMO-001', name: 'ALEX RIVERA' },
+    { id: 'DEMO-002', name: 'JAMIE SANTOS' },
+    { id: 'DEMO-003', name: 'MORGAN LEE' },
+    { id: 'DEMO-004', name: 'TAYLOR CRUZ' }
+];
+let demoChain;
 
 // ==========================================
 // TARGET DRIVE CONFIGURATION
@@ -36,6 +45,23 @@ function normalizeAndSort(str) {
 }
 
 function getBlockchain() {
+    if (DEMO_MODE) {
+        if (!demoChain) {
+            const genesis = {
+                index: 0,
+                timestamp: new Date().toISOString(),
+                mcoId: 'SYS',
+                voterName: 'System',
+                choice: 'GENESIS_BLOCK',
+                prevHash: '0',
+                hash: ''
+            };
+            genesis.hash = calculateHash(genesis.index, genesis.timestamp, genesis.mcoId, genesis.voterName, genesis.choice, genesis.prevHash);
+            demoChain = [genesis];
+        }
+        return demoChain;
+    }
+
     if (!fs.existsSync(DB_FILE)) {
         const genesis = {
             index: 0,
@@ -61,11 +87,11 @@ app.post('/api/vote', (req, res) => {
         return res.status(400).json({ error: 'Please provide your MCO ID or Name and your choice.' });
     }
 
-    if (!fs.existsSync(REGISTRY_FILE)) {
+    if (!DEMO_MODE && !fs.existsSync(REGISTRY_FILE)) {
         return res.status(500).json({ error: 'Registry file missing on secure storage.' });
     }
 
-    const registry = JSON.parse(fs.readFileSync(REGISTRY_FILE, 'utf8'));
+    const registry = DEMO_MODE ? DEMO_REGISTRY : JSON.parse(fs.readFileSync(REGISTRY_FILE, 'utf8'));
     const cleanInput = inputQuery.trim().toUpperCase();
     const normalizedInputTokens = normalizeAndSort(inputQuery);
 
@@ -102,7 +128,9 @@ app.post('/api/vote', (req, res) => {
     newBlock.hash = calculateHash(newBlock.index, newBlock.timestamp, newBlock.mcoId, newBlock.voterName, newBlock.choice, newBlock.prevHash);
     
     chain.push(newBlock);
-    fs.writeFileSync(DB_FILE, JSON.stringify(chain, null, 2));
+    if (!DEMO_MODE) {
+        fs.writeFileSync(DB_FILE, JSON.stringify(chain, null, 2));
+    }
 
     res.json({ success: true, message: `Vote successfully recorded for ${matchedMco.name} (${matchedMco.id}).` });
 });
@@ -124,7 +152,11 @@ app.get('/api/chain', (req, res) => {
     res.json({ chain, isValid });
 });
 
+app.get('/api/config', (req, res) => {
+    res.json({ demoMode: DEMO_MODE });
+});
+
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`SOCOTECO II Plebiscite Server running on port ${PORT}`);
-    console.log(`Secured Data Path: ${DB_FILE}`);
+    console.log(`SOCOTECO II Plebiscite Server running on port ${PORT}${DEMO_MODE ? ' in DEMO MODE' : ''}`);
+    if (!DEMO_MODE) console.log(`Secured Data Path: ${DB_FILE}`);
 });
