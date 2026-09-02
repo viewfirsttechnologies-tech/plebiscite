@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOCOTECO II & Ignite Power - Plebiscite Voting</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --yes-color: #16a34a;
+            --no-color: #dc2626;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 25px; }
+        header h1 { color: var(--primary); margin-bottom: 5px; font-size: 1.5rem; }
+        header p { color: #475569; font-weight: 600; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        .vote-options { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .vote-btn { padding: 15px; font-size: 1.2rem; font-weight: bold; border: 2px solid transparent; border-radius: 8px; cursor: pointer; color: white; transition: transform 0.1s, opacity 0.2s; }
+        .vote-btn:active { transform: scale(0.98); }
+        .btn-yes { background-color: var(--yes-color); }
+        .btn-no { background-color: var(--no-color); }
+        .vote-btn.selected { border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.2); }
+        button.submit-vote { background-color: var(--primary); color: white; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: 600; border-radius: 6px; cursor: pointer; width: 100%; transition: background-color 0.2s; }
+        button.submit-vote:hover { background-color: var(--primary-hover); }
+        .chain-status { padding: 12px; border-radius: 6px; font-weight: bold; text-align: center; margin-bottom: 15px; }
+        .status-valid { background-color: #dcfce7; color: #166534; }
+        .status-invalid { background-color: #fee2e2; color: #991b1b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--border-color); padding: 10px; text-align: left; font-size: 0.85rem; word-break: break-all; }
+        th { background-color: #f1f5f9; }
+        .block-row { font-family: monospace; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+        .badge-yes { background: #dcfce7; color: #166534; }
+        .badge-no { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>PLEBISCITE VOTING SYSTEM</h1>
+        <p>Conditional Joint Venture Agreement (JVA) between SOCOTECO II & Ignite Power</p>
+    </header>
+
+    <div id="chainStatus" class="chain-status status-valid">Loading System Status...</div>
+
+    <div class="card">
+        <h2>Cast Your Plebiscite Vote</h2>
+        <div class="form-group">
+            <label for="inputQuery">Member-Consumer-Owner (MCO) ID or Name:</label>
+            <input type="text" id="inputQuery" placeholder="e.g., 00013 or JAMES REED or Reed James">
+        </div>
+        <label>Do you approve the Conditional Joint Venture Agreement?</label>
+        <p style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">Select your choice below:</p>
+        <div class="vote-options">
+            <button type="button" class="vote-btn btn-yes" onclick="selectVote('YES')">YES</button>
+            <button type="button" class="vote-btn btn-no" onclick="selectVote('NO')">NO</button>
+        </div>
+        <button class="submit-vote" onclick="castVote()">Submit Secure Vote</button>
+    </div>
+
+    <div class="card">
+        <h2>Live Plebiscite Tally</h2>
+        <div id="tallyBoard">Loading tally...</div>
+    </div>
+
+    <div class="card">
+        <h2>Blockchain Ledger Inspector</h2>
+        <p style="font-size: 0.85rem; color: #64748b;">Cryptographically secured distributed ledger ensuring immutable voting records.</p>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>Timestamp</th>
+                        <th>MCO ID</th>
+                        <th>Voter Name</th>
+                        <th>Choice</th>
+                        <th>Prev Hash</th>
+                        <th>Current Hash</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedChoice = '';
+
+    function selectVote(choice) {
+        selectedChoice = choice;
+        document.querySelectorAll('.vote-btn').forEach(btn => btn.classList.remove('selected'));
+        if (choice === 'YES') {
+            document.querySelector('.btn-yes').classList.add('selected');
+        } else {
+            document.querySelector('.btn-no').classList.add('selected');
+        }
+    }
+
+    async function loadChainData() {
+        try {
+            const res = await fetch('/api/chain');
+            const data = await res.json();
+            renderUI(data.chain, data.isValid);
+        } catch (err) {
+            console.error('Failed to fetch blockchain:', err);
+        }
+    }
+
+    async function castVote() {
+        const inputQuery = document.getElementById('inputQuery').value.trim();
+        if (!inputQuery) {
+            alert("Please enter your MCO ID or Name.");
+            return;
+        }
+        if (!selectedChoice) {
+            alert("Please choose either YES or NO.");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inputQuery, choice: selectedChoice })
+            });
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message);
+                document.getElementById('inputQuery').value = '';
+                selectedChoice = '';
+                document.querySelectorAll('.vote-btn').forEach(btn => btn.classList.remove('selected'));
+                loadChainData();
+            } else {
+                alert("Error: " + result.error);
+            }
+        } catch (err) {
+            alert("Network connection error.");
+        }
+    }
+
+    function renderUI(chain, isValid) {
+        const ledgerTable = document.getElementById('ledgerTable');
+        const tallyBoard = document.getElementById('tallyBoard');
+        const chainStatus = document.getElementById('chainStatus');
+
+        ledgerTable.innerHTML = '';
+        let tally = { 'YES': 0, 'NO': 0 };
+
+        for (let block of chain) {
+            const row = document.createElement('tr');
+            row.className = 'block-row';
+            let badgeClass = block.choice === 'YES' ? 'badge-yes' : 'badge-no';
+            let choiceDisplay = block.index > 0 ? `<span class="badge ${badgeClass}">${block.choice}</span>` : 'GENESIS';
+
+            row.innerHTML = `
+                <td>${block.index}</td>
+                <td>${block.timestamp}</td>
+                <td>${block.mcoId}</td>
+                <td>${block.voterName}</td>
+                <td>${choiceDisplay}</td>
+                <td style="font-size: 0.75rem; color: #64748b;">${block.prevHash}</td>
+                <td style="font-size: 0.75rem; font-weight: bold;">${block.hash}</td>
+            `;
+            ledgerTable.appendChild(row);
+
+            if (block.index > 0 && tally.hasOwnProperty(block.choice)) {
+                tally[block.choice]++;
+            }
+        }
+
+        let totalVotes = tally['YES'] + tally['NO'];
+        tallyBoard.innerHTML = `
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 8px; font-size: 1.1rem;"><strong>YES:</strong> ${tally['YES']} votes</li>
+                <li style="margin-bottom: 8px; font-size: 1.1rem;"><strong>NO:</strong> ${tally['NO']} votes</li>
+            </ul>
+            <p><strong>Total Valid Votes Cast:</strong> ${totalVotes}</p>
+        `;
+
+        if (isValid) {
+            chainStatus.className = 'chain-status status-valid';
+            chainStatus.innerText = 'Blockchain Integrity: VERIFIED (100% Tamper-Proof & Secure)';
+        } else {
+            chainStatus.className = 'chain-status status-invalid';
+            chainStatus.innerText = 'CRITICAL ALERT: Blockchain Integrity Compromised! Unauthorized modification detected.';
+        }
+    }
+
+    window.onload = loadChainData;
+</script>
+</body>
+</html>
